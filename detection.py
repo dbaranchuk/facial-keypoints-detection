@@ -32,7 +32,7 @@ VAL_SIZE = 0.10
 BATCH_SIZE = 64
 DROP_OUT = 0.25
 N_EPOCH = 50
-PATIENCE = 50
+PATIENCE = 5
 INIT = 'he_normal'
 ReLU = 0.01
 MOMENTUM = 0.9
@@ -43,9 +43,6 @@ N_FILTERS3 = 128 # 192 128  # CONV3
 N_FILTERS4 = 256 # 256 192  # CONV4
 N_FILTERS5 = 512 # 512 256  # FC
 
-print('===========================')
-print('NEW ARCHITECTURE')
-print('MAX_POOL = MaxPooling2D')
 print('===========================')
 print(reg, lr_rt, lr_dc)
 print('===========================')
@@ -70,7 +67,6 @@ print('===========================')
 class LearningRateDecay(Callback):
     def __init__(self):
         self.prev_val_loss = 1.
-        self.flag = False
         self.decay = 0.001
 
     def on_epoch_end(self, epoch, logs={}):
@@ -79,15 +75,10 @@ class LearningRateDecay(Callback):
         
         cur_val_loss = round(logs.get('val_loss'), 4)
         if cur_val_loss >= self.prev_val_loss:
-            if self.flag:
-                self.model.optimizer.lr -= self.decay
-                optimizer = self.model.optimizer
-                lr = (optimizer.lr * (1. / (1. + optimizer.decay * optimizer.iterations))).eval()
-                print('\nLR: {:.8f}'.format(float(lr)))
-                self.flag = False
-            else:
-                self.flag = True
-
+            self.model.optimizer.lr -= self.decay
+            optimizer = self.model.optimizer
+            lr = (optimizer.lr * (1. / (1. + optimizer.decay * optimizer.iterations))).eval()
+            print('\nLR: {:.8f}'.format(float(lr)))                
         self.prev_val_loss = cur_val_loss
 
 class BarNet:
