@@ -2,16 +2,14 @@
 from math import cos, sin, pi, degrees
 
 from skimage.transform import resize, rotate
-from skimage.exposure import equalize_hist
 
 from keras.models import Sequential
-from keras.layers import Dense, Dropout, Activation, Flatten, Reshape
+from keras.layers import Dense, SpatialDropout2D, Dropout, Activation, Flatten, Reshape
 from keras.layers import Convolution2D, MaxPooling2D, ZeroPadding2D
-from keras.optimizers import SGD, Adam, Adadelta
+from keras.optimizers import Adadelta
 from keras.layers.normalization import BatchNormalization
-from keras.regularizers import l2
 from keras.layers.advanced_activations import LeakyReLU
-from keras.callbacks import EarlyStopping, Callback
+from keras.callbacks import EarlyStopping
 from keras import backend as K
 
 import numpy as np
@@ -20,16 +18,15 @@ import matplotlib.pyplot as plt
 
 FACEPOINTS_COUNT = 14
 
-REG = 0.000001
-
+REG = 0.0
 IMAGE_SIZE = 64
 VAL_SIZE = 1000
 BATCH_SIZE = 64
-DROP_OUT = 0.15
-N_EPOCH = 20
-PATIENCE = 6
+DROP_OUT = 0.3
+N_EPOCH = 25
+PATIENCE = 8
 INIT = 'he_normal'
-ReLU = 0.01
+ReLU = 1./5.5
 
 N_FILTERS1 = 32   # CONV1
 N_FILTERS2 = 128  # CONV2
@@ -39,25 +36,25 @@ N_FILTERS4 = 512  # FC
 #DATA AUGMETATION
 ARG = pi/30
 SCALE = 0.8
-P = 0.5
+P = 0.55
 
-#print('===========================')
-#print('REG: %f' % REG)
-#print('DROP_OUT: %f' % DROP_OUT)
-#print('INIT: %s' % INIT)
-#print('N_EPOCH: %d' % N_EPOCH)
-#print('ReLU: %f' % ReLU)
-#print('PATIENCE: %d' % PATIENCE)
-#print('===========================')
-#print('IMAGE_SIZE: %d' % IMAGE_SIZE)
-#print('VAL_SIZE: %d' % VAL_SIZE)
-#print('BATCH_SIZE: %d' % BATCH_SIZE)
-#print('===========================')
-#print('N_FILTERS1: %d' % N_FILTERS1)
-#print('N_FILTERS2: %d' % N_FILTERS2)
-#print('N_FILTERS3: %d' % N_FILTERS3)
-#print('N_FILTERS4: %d' % N_FILTERS4)
-#print('===========================')
+# print('===========================')
+# print('REG: %f' % REG)
+# print('DROP_OUT: %f' % DROP_OUT)
+# print('INIT: %s' % INIT)
+# print('N_EPOCH: %d' % N_EPOCH)
+# print('ReLU: %f' % ReLU)
+# print('PATIENCE: %d' % PATIENCE)
+# print('===========================')
+# print('IMAGE_SIZE: %d' % IMAGE_SIZE)
+# print('VAL_SIZE: %d' % VAL_SIZE)
+# print('BATCH_SIZE: %d' % BATCH_SIZE)
+# print('===========================')
+# print('N_FILTERS1: %d' % N_FILTERS1)
+# print('N_FILTERS2: %d' % N_FILTERS2)
+# print('N_FILTERS3: %d' % N_FILTERS3)
+# print('N_FILTERS4: %d' % N_FILTERS4)
+# print('===========================')
 
 def flip_y(y_data):
     flip_indices = [(0, 3), (1, 2), (4, 9),
@@ -85,7 +82,7 @@ class BarNet:
     
     def __init__(self):
         self.model = Sequential()
-
+        
         #CONV1
         self.model.add(Convolution2D(N_FILTERS1, 3, 3, init=INIT, input_shape=(3, IMAGE_SIZE, IMAGE_SIZE)))
         self.model.add(LeakyReLU(alpha=ReLU))
@@ -95,16 +92,18 @@ class BarNet:
         self.model.add(BatchNormalization())
         
         #CONV2
-        self.model.add(Convolution2D(N_FILTERS2, 2, 2, init=INIT, W_regularizer=l2(REG)))
+        self.model.add(Convolution2D(N_FILTERS2, 2, 2, init=INIT))
         self.model.add(LeakyReLU(alpha=ReLU))
+        self.model.add(SpatialDropout2D(0.1))
 
         #MAX_POOL2
         self.model.add(MaxPooling2D((2, 2), strides=(2, 2)))
         self.model.add(BatchNormalization())
-
+        
         #CONV3
-        self.model.add(Convolution2D(N_FILTERS3, 2, 2, init=INIT, W_regularizer=l2(REG)))
+        self.model.add(Convolution2D(N_FILTERS3, 2, 2, init=INIT))
         self.model.add(LeakyReLU(alpha=ReLU))
+        self.model.add(SpatialDropout2D(0.2))
 
         #MAX_POOL3
         self.model.add(MaxPooling2D((2, 2), strides=(2, 2)))
@@ -133,11 +132,12 @@ class BarNet:
         if y is None:
             self.X_test = X
         else:
-            mask = range(4 * VAL_SIZE)
+            train_size = len(X) - VAL_SIZE
+            mask = range(train_size)
             self.X_train = X[mask]
             self.y_train = y[mask]
         
-            mask = range(4 * VAL_SIZE, 5 * VAL_SIZE)
+            mask = range(train_size, train_size + VAL_SIZE)
             self.X_val = X[mask]
             self.y_val = y[mask]
 
@@ -165,14 +165,15 @@ class BarNet:
         flip_indices = [(0, 3), (1, 2), (4, 9),
                         (5, 8), (6, 7), (11, 13)]
         X_aug, y_aug = ([],[])
+        
         for i in range(len(self.X_train)):
             new_X = [self.X_train[i]]
             new_y = [self.y_train[i]]
             
-            if rnd(0, 1) < P+0.15: #NEW
+            if rnd(0, 1) < P:
                 new_X.append(new_X[0][:,::-1,:])
                 new_y.append(flip_y(new_y[0]))
-
+            
             #Contrast NEW
             for j in range(len(new_X)):
                 if rnd(0, 1) < P/2:
@@ -180,22 +181,22 @@ class BarNet:
                     new_y.append(new_y[j])
 
             for j in range(len(new_X)):
-                if rnd(0, 1) < P:
+                if rnd(0, 1) < P+0.05:
                     sgn = np.sign(rnd(-1, 1))
                     arg = sgn * rnd(ARG, 2*ARG)
                     new_X.append(rotate(new_X[j], degrees(arg)))
                     new_y.append(rotate_y(new_y[j], arg))
 
-                #Rotation ~90 NEW
-                if rnd(0, 1) < P:
+                #Rotation 90 NEW
+                if rnd(0, 1) < P+0.05:
                     sgn = np.sign(rnd(-1, 1))
                     arg = sgn * (pi/2 - rnd(ARG, 2*ARG))
                     new_X.append(rotate(new_X[j], degrees(arg)))
                     new_y.append(rotate_y(new_y[j], arg))
-                        
+
             X_aug += new_X
             y_aug += new_y
-        
+    
         self.X_train = np.array(X_aug)
         self.y_train = np.array(y_aug)
 
@@ -204,14 +205,14 @@ class BarNet:
         self.X_val = self.X_val.transpose(0, 3, 1, 2)
 
         self.model.compile(optimizer=Adadelta(), loss='mse')
-        self.model.fit(self.X_train, self.y_train, batch_size=BATCH_SIZE,
-                       callbacks=[EarlyStopping(patience=PATIENCE)],
-                       nb_epoch=N_EPOCH, validation_data=(self.X_val, self.y_val))
+        self.model.fit(self.X_train, self.y_train, batch_size=BATCH_SIZE, callbacks=[EarlyStopping(patience=PATIENCE)],
+                nb_epoch=N_EPOCH, validation_data=(self.X_val, self.y_val))
     
     def predict(self):
         self.X_test = self.X_test.transpose(0, 3, 1, 2)
         result = self.model.predict(self.X_test, batch_size=BATCH_SIZE)
         return result.reshape(len(self.X_test), FACEPOINTS_COUNT, 2)
+
 
 def resize_images(X):
     X = list(X)
@@ -226,11 +227,10 @@ def resize_images(X):
 def train_detector(X, y):
     model = BarNet()
     print("Initialization is completed")
-    
+
     X, ratios = resize_images(X)
     y = y * ratios - 1
     print("Resizing is completed")
-    
     model.set_data(X, y)
     model.augment_data()
     print("Data augmentation is completed")
@@ -240,6 +240,7 @@ def train_detector(X, y):
     print("Preprocessing is completed")
     
     model.train()
+    
     return model
 
 def detect(model, X):
@@ -251,7 +252,7 @@ def detect(model, X):
         X_pred.append(X[i,:,::-1,:])
         #Contrast NEW
         X_pred.append(contrast(X[i], SCALE))
-
+    
     X_pred = np.array(X_pred)
     model.set_data(X_pred)
     model.zero_center('test')
@@ -265,4 +266,3 @@ def detect(model, X):
         y_pred.append(np.round(mean_y))
     
     return y_pred
-
