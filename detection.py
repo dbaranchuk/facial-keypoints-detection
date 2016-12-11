@@ -78,8 +78,8 @@ def contrast(X_data, scale):
     X[...,2] = scale * X[...,2] + (1 - scale) * np.mean(X[..., 2])
     return X
 
+
 class BarNet:
-    
     def __init__(self):
         self.model = Sequential()
         
@@ -240,7 +240,6 @@ def train_detector(X, y):
     print("Preprocessing is completed")
     
     model.train()
-    
     return model
 
 def detect(model, X):
