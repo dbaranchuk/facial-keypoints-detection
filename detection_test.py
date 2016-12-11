@@ -100,11 +100,10 @@ def visualise(imgs, detection_points, gt_points, res_dir, relative_radius=0.02, 
             pil_draw.ellipse(
                 (pt2[0] - radius, pt2[1] - radius, pt2[0] + radius, pt2[1] + radius), fill=gt_color)
 
-        pil_img.save(res_dir + '/out' + str(i) + '.jpg')#impaths[i]
+        pil_img.save(res_dir + '/out' + str(i) + '.jpg')
 
 start_time = time.time()
 train_dir = '/Users/dmitrybaranchuk/cvintro2016/hw-06/10-facial-keypoints-pub'
-model_dir = '/Users/dmitrybaranchuk/cvintro2016/hw-06/my_model.h5'
 res_dir = '/Users/dmitrybaranchuk/cvintro2016/hw-06/results'
 
 train_imgs, train_gt = load_data(train_dir)
@@ -124,7 +123,6 @@ train_gt = train_gt[mask]
 try:
     barnet = train_detector(train_imgs, train_gt)
     barnet.model.save_weights(model_dir, overwrite=True)
-#    barnet.model.to_json()
 
     layer = barnet.model.layers[0]
     weights = np.array(layer.get_weights()[0])
