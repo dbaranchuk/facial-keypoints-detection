@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 from math import ceil, sqrt
 
-from skimage.transform import resize
-
 import numpy as np
 import time
 from sys import argv, stdout, exit
@@ -10,15 +8,12 @@ from skimage.io import imread
 from detection import train_detector, detect
 from PIL import Image, ImageDraw
 
-from skimage.transform import resize
-import matplotlib.pyplot as plt
-
 TEST_SIZE = 1000
 FACEPOINTS_COUNT = 14
 VISUALIZE = True
 
-def visualize_grid(Xs, ubound=255.0, padding=1):
-    
+
+def visualize_grid(Xs, ubound=255.0, padding=1):    
     (N, H, W, C) = Xs.shape
     grid_size = int(ceil(sqrt(N)))
     grid_height = H * grid_size + padding * (grid_size - 1)
@@ -39,6 +34,7 @@ def visualize_grid(Xs, ubound=255.0, padding=1):
         y0 += H + padding
         y1 += H + padding
     return grid
+
 
 def load_data(path, return_paths=False):
     fi = open(path + '/gt.txt')
@@ -103,8 +99,8 @@ def visualise(imgs, detection_points, gt_points, res_dir, relative_radius=0.02, 
         pil_img.save(res_dir + '/out' + str(i) + '.jpg')
 
 start_time = time.time()
-train_dir = '/Users/dmitrybaranchuk/cvintro2016/hw-06/10-facial-keypoints-pub'
-res_dir = '/Users/dmitrybaranchuk/cvintro2016/hw-06/results'
+train_dir = '10-facial-keypoints-pub'
+res_dir = 'results'
 
 train_imgs, train_gt = load_data(train_dir)
 print("Data has been loaded")
