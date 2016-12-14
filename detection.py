@@ -23,8 +23,8 @@ IMAGE_SIZE = 64
 VAL_SIZE = 1000
 BATCH_SIZE = 64
 DROP_OUT = 0.3
-N_EPOCH = 25
-PATIENCE = 8
+N_EPOCH = 100
+PATIENCE = 30
 INIT = 'he_normal'
 ReLU = 1./5.5
 
@@ -36,7 +36,7 @@ N_FILTERS4 = 512  # FC
 #DATA AUGMETATION
 ARG = pi/30
 SCALE = 0.8
-P = 0.55
+P = 0.5
 
 # print('===========================')
 # print('REG: %f' % REG)
