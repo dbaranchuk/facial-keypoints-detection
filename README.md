@@ -1,8 +1,10 @@
 # Facial Keypoints Detection
 
-####Lib: Keras (Theano Backend)
+####Lib: Keras (TensorFlow Backend)
 
 ####Accuracy: RMSE: 0.0282
+
+####Speed: 0.75ms for a forward pass on GTX 1070
 
 ####Training data: https://yadi.sk/d/bMEZdr8trGV6v
 
