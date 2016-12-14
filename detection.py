@@ -84,7 +84,7 @@ class BarNet:
         self.model = Sequential()
         
         #CONV1
-        self.model.add(Convolution2D(N_FILTERS1, 3, 3, init=INIT, input_shape=(3, IMAGE_SIZE, IMAGE_SIZE)))
+        self.model.add(Convolution2D(N_FILTERS1, 3, 3, init=INIT, input_shape=(IMAGE_SIZE, IMAGE_SIZE, 3)))
         self.model.add(LeakyReLU(alpha=ReLU))
         
         #MAX_POOL1
@@ -201,15 +201,11 @@ class BarNet:
         self.y_train = np.array(y_aug)
 
     def train(self):
-        self.X_train = self.X_train.transpose(0, 3, 1, 2)
-        self.X_val = self.X_val.transpose(0, 3, 1, 2)
-
         self.model.compile(optimizer=Adadelta(), loss='mse')
         self.model.fit(self.X_train, self.y_train, batch_size=BATCH_SIZE, callbacks=[EarlyStopping(patience=PATIENCE)],
                 nb_epoch=N_EPOCH, validation_data=(self.X_val, self.y_val))
     
     def predict(self):
-        self.X_test = self.X_test.transpose(0, 3, 1, 2)
         result = self.model.predict(self.X_test, batch_size=BATCH_SIZE)
         return result.reshape(len(self.X_test), FACEPOINTS_COUNT, 2)
 
