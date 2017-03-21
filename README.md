@@ -1,14 +1,14 @@
 # Facial Keypoints Detection
 
-####Lib: Keras (TensorFlow Backend)
+#### Lib: Keras (TensorFlow Backend)
 
-####Accuracy: RMSE: 0.0282
+#### Accuracy: RMSE: 0.0282
 
-####Time: 21.19 minutes on GTX 1070
+#### Time: 21.19 minutes on GTX 1070
 
-####Training data: https://yadi.sk/d/bMEZdr8trGV6v
+#### Training data: https://yadi.sk/d/bMEZdr8trGV6v
 
-####Examples:
+#### Examples:
 
 ![example](http://dl2.joxi.net/drive/2016/12/11/0009/2513/641489/89/5edf3846f7.jpg)
 
